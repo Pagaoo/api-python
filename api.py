@@ -1,30 +1,17 @@
-from decouple import config
 from flask import Flask, jsonify, request
-import psycopg2
+
+from bd_connection import get_db_connection
 
 
 app  = Flask(__name__)
 
-DATABASE_HOST = config('DATABASE_HOST')
-DATABASE_NAME = config('DATABASE_NAME')
-DATABASE_USER = config('DATABASE_USER')
-DATABASE_PASSWORD = config('DATABASE_PASSWORD')
-
-
-def get_db_connection():
-    connection = psycopg2.connect(
-        host = DATABASE_HOST,
-        database = DATABASE_NAME,
-        user = DATABASE_USER,
-        password = DATABASE_PASSWORD
-    )
-    return connection
+get_db_connection()
 
 @app.route('/livros', methods=['GET'])
 def obter_livros():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM livros")
+    cursor.execute("SELECT * FROM livros ORDER BY id ASC")
     livros = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -59,7 +46,7 @@ def editar_titulo_do_livro_por_id(id):
     livro_alterado = request.get_json()
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE livros SET titulo = %s WHERE id = %s", (livro_alterado['titulo'], livro_alterado['autor'], id))
+    cursor.execute("UPDATE livros SET titulo = %s WHERE id = %s", (livro_alterado['titulo'], id))
     conn.commit()
     cursor.close()
     conn.close()
@@ -70,7 +57,7 @@ def editar_autor_do_livro_por_id(id):
     livro_alterado = request.get_json()
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE livros SET autor = %s WHERE id = %s", (livro_alterado['titulo'], livro_alterado['autor'], id))
+    cursor.execute("UPDATE livros SET autor = %s WHERE id = %s", (livro_alterado['autor'], id))
     conn.commit()
     cursor.close()
     conn.close()
@@ -81,7 +68,7 @@ def editar_autor_do_livro_por_id(id):
 def deletar_livro_por_id(id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("DELTE FROM livros WHERE id = %s", (id,))
+    cursor.execute("DELETE FROM livros WHERE id = %s", (id,))
     conn.commit()
     cursor.close()
     conn.close()
